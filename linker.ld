@@ -8,7 +8,7 @@ SECTIONS
     . = 0x7C00;
     .text : {
         /* Place the code in hw.o before all other code */
-        hw.o(.text);
+        build/boot.o(.text);
         *(.text);
     }
 
@@ -38,5 +38,6 @@ SECTIONS
     /DISCARD/ : {
         *(.eh_frame);
         *(.comment);
+        *(.note.gnu.build-id);
     }
 }
