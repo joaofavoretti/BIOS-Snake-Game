@@ -1,6 +1,7 @@
 global getc
 global exit
 global square
+global color
 global sleep
 
 bits 16
@@ -37,6 +38,23 @@ exit:
     hlt                 ; Halt CPU
 
 
+;
+; void sleep: Sleep for a number of milliseconds
+;
+sleep:
+    pushad
+    
+    mov ah, 0x86        ; Get System Time
+    mov cx, 0x2         ; Wait for 2 ticks
+    int 0x15            ; BIOS Timer Services interruption
+    
+    popad
+    ret
+
+
+%define VGA_SEGMENT 0xA000
+%define SQUARE_SIZE 10
+%define SCREEN_WIDTH 320
 ; 
 ; void square: Draw a square on screen at (x, y) with color
 ; Params:
@@ -44,9 +62,6 @@ exit:
 ;   y (esp+0x8): y coordinate of the square
 ;   color (esp+0x12): 8-bit color of the square 
 ;
-%define VGA_SEGMENT 0xA000
-%define SQUARE_SIZE 10
-%define SCREEN_WIDTH 320
 square:
     pushad                  ; Save Registers
 
@@ -96,16 +111,47 @@ square:
 
     retf
 
-
 ;
-; void sleep: Sleep for a number of milliseconds
+; int8_t color: Get the color of a square at the (x, y) position
+; Params:
+;   x (esp+0x4): x coordinate of the square
+;   y (esp+0x8): y coordinate of the square
+; Return:
+;   al: 8-bit color of the square
 ;
-sleep:
+color:
     pushad
-    
-    mov ah, 0x86        ; Get System Time
-    mov cx, 0x2         ; Wait for 2 ticks
-    int 0x15            ; BIOS Timer Services interruption
-    
+
+    ; Defining the position of the function parameters
+    %define X [ds:esp+36]
+    %define Y [ds:esp+40]
+
+    ; Set the VGA Segment
+    ; It is where the video memory is located on the memory
+    mov ax, VGA_SEGMENT
+    mov es, ax                  ; ES = VGA_SEGMENT
+
+    ; Calculate the addressing of the first pixel of the current row
+    mov ax, X                   ; EAX = X
+    mov cx, SQUARE_SIZE         ; ECX = SQUARE_SIZE
+    mul cx                      ; EAX = X * SQUARE_SIZE
+    mov di, ax                  ; EDI = X * SQUARE_SIZE
+    mov ax, Y                   ; AX = Y
+    mov cx, SQUARE_SIZE         ; CX = SQUARE_SIZE
+    mul cx                      ; AX = Y * SQUARE_SIZE
+    add ax, bx                  ; AX = Y * SQUARE_SIZE + Y
+    mov cx, SCREEN_WIDTH        ; ECX = X_RESOLUTION
+    mul cx                      ; EAX = (Y * SQUARE_SIZE + Y) * X_RESOLUTION
+    add di, ax                  ; EDI = (Y * SQUARE_SIZE + Y) * X_RESOLUTION + X * SQUARE_SIZE
+
+    ; Get the color of the pixel
+    mov al, [es:di]
+
+    ; Set the Extended Data Segment back to 0
+    xor ax, ax
+    mov es, ax
+
+    ; Restore Registers
     popad
-    ret
+
+    retf

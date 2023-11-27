@@ -17,7 +17,7 @@ def main():
             if byte != 0:
                 count += 1
 
-    print('Non-zero bytes: {}/{}'.format(count, len(data)))
+    print('Used bytes: {}/{}'.format(count, len(data)))
 
 
 if __name__ == '__main__':

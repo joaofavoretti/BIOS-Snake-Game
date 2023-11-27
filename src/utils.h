@@ -20,6 +20,14 @@ void exit();
 void square(int8_t x, int8_t y, int8_t color);
 
 /**
+ * Return the color of the square of a given (x, y) position=
+ * Params:
+ * x: x coordinate of the square
+ * y: y coordinate of the square
+ */
+int8_t color(int8_t x, int8_t y);
+
+/**
  * Sleep for a given number of microseconds
 */
 void sleep();
